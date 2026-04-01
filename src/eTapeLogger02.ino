@@ -3,7 +3,6 @@
 //Device CoreID: e00fce6816fe5cd226cc300b
 //Author: Luca Cecere
 //Credit to CSU Agricultural Water Quality Program Team
-//This is a test to see if pushing will work
 
 #include "Particle.h"
 
