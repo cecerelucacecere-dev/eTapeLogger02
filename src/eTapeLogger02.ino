@@ -14,7 +14,7 @@ SYSTEM_THREAD(ENABLED); // System thread defaults to on in 6.2.0 and later and t
 SerialLogHandler logHandler;
 
 // Sleep time between cycles (measurement period)
-const std::chrono::minutes publishPeriod = 5min;
+const std::chrono::minutes publishPeriod = 1min;
 
 // Time to turn sleep OFF off before taking a measurement
 const std::chrono::seconds sensorWarmup = 10s;
@@ -29,7 +29,7 @@ const char *eventName = "eTape Log 2";
 const pin_t ETAPE_PIN = A0;     // your eTape on A0
 const float VREF      = 3.3f;   // Boron ADC full-scale
 const int   NUMSAMPLES = 20;    // Amount of samples taken for smoothing
-const int   batchSize = 6;      // Amount of readings in a batch
+const int   batchSize = 3;      // Amount of readings in a batch
 
 //declaration of variables
 FuelGauge fuel;
