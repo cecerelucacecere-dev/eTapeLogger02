@@ -1,4 +1,6 @@
-//Project Name: eTape Code
+//Project Name: CouleeRunoff_02 eTape Code
+//Device Name: CouleeRunoff_02
+//Device CoreID: e00fce6816fe5cd226cc300b
 //Author: Luca Cecere
 //Credit to CSU Agricultural Water Quality Program Team
 //This is a test to see if pushing will work
