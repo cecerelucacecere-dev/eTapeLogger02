@@ -7,13 +7,13 @@
 #include "Particle.h"
 
 #ifndef SYSTEM_VERSION_v620
-SYSTEM_THREAD(ENABLED); // System thread defaults to on in 6.2.0 and later and this line is not required
+SYSTEM_THREAD(ENABLED); 
 #endif
 
 SerialLogHandler logHandler;
 
 // Sleep time between cycles (measurement period)
-const std::chrono::minutes publishPeriod = 1min;
+const std::chrono::minutes publishPeriod = 5min;
 
 // Time to turn sleep OFF off before taking a measurement
 const std::chrono::seconds sensorWarmup = 10s;
@@ -23,17 +23,24 @@ const std::chrono::seconds postDelay = 10s;
 
 // The event name to publish with
 const char *eventName = "eTape Log 2";
-//const char *eventName2 = "Total Log";
 
-const pin_t ETAPE_PIN = A0;     // your eTape on A0
+const pin_t ETAPE_PIN = A0;     // eTape on A0
 const float VREF      = 3.3f;   // Boron ADC full-scale
 const int   NUMSAMPLES = 20;    // Amount of samples taken for smoothing
-const int   batchSize = 3;      // Amount of readings in a batch
+const int   batchSize = 12;     // Amount of readings in a batch
+const int   maxBuffer = 24;     // Total amount of offline storage
 
-//declaration of variables
+//Declaration of variables
 FuelGauge fuel;
 
 int   v = 0;
+
+// Particle variable (open you particle app)
+double v_depth = 0.0;
+double v_sensorV = 0.0;
+double v_battSoc = 0.0;
+double v_battV = 0.0;
+int v_cellSig = 0;
 
 struct Reading
 {                 
@@ -46,7 +53,7 @@ struct Reading
 };
 
 Reading currentReading;
-retained Reading readings[batchSize]; //3 readings in 3 minutes
+retained Reading readings[maxBuffer]; 
 retained int readingCount = 0;
 
 //declaration of functions
@@ -54,7 +61,7 @@ void takeMeasurement();         // Take a reading
 void publishBatch();            // Publish readings to Google SHEETS
 void goToSleep();               // Go into sleep mode
 void battSettings();            // Configure PMIC
-void storeReading();            // batch load readings
+void storeReading();            // Batch load readings
 
 void setup() {
     
@@ -63,6 +70,14 @@ void setup() {
     waitFor(Serial.isConnected, 3000);
     Log.info("Starting eTape logger");
     battSettings();
+
+    // Register variables to the Particle Cloud (Max 12 chars per name)
+    Particle.variable("Depth", v_depth);
+    Particle.variable("SensorVolts", v_sensorV);
+    Particle.variable("BattSoC", v_battSoc);
+    Particle.variable("BattVolts", v_battV);
+    Particle.variable("CellSignal", v_cellSig);
+    Particle.variable("QCount", readingCount); // Exposing the retained count
     
 }
 
@@ -120,17 +135,24 @@ void takeMeasurement() {
     currentReading.cellStrength = sig.getStrength();
 
     currentReading.timestamp = Time.now();
+
+    // Particle varibles
+    v_depth = (double)currentReading.depth;
+    v_sensorV = (double)currentReading.volts;
+    v_battSoc = (double)currentReading.batterySoc;
+    v_battV = (double)currentReading.batteryVolts;
+    v_cellSig = currentReading.cellStrength;
 }
 
 void storeReading() {
 
-    if (readingCount < batchSize) {
+    if (readingCount < maxBuffer) {
         readings[readingCount] = currentReading;
         readingCount++;
 
     }
 }
-// prepares a JSON-ish array and publishes it
+// prepares array and publishes it
 void publishBatch() {
    
     if (!Particle.connected()) {
@@ -141,7 +163,7 @@ void publishBatch() {
 
     if (Particle.connected()) {
         
-        char payload[512];
+        char payload[1024];
         payload[0] = '\0';
 
         strcat(payload, "[");
@@ -168,12 +190,16 @@ void publishBatch() {
 
         strcat(payload, "]");
 
-        Particle.publish(eventName, payload, PRIVATE);
+        // Only clear the retained array if the publish actually succeeds
+        bool success = Particle.publish(eventName, payload, PRIVATE);
+        
+        if(success){
+         readingCount = 0;
 
-        readingCount = 0;
-
+        }
     }
 }
+
 
 void goToSleep() {
 
@@ -183,7 +209,7 @@ void goToSleep() {
       .network(NETWORK_INTERFACE_CELLULAR, SystemSleepNetworkFlag::INACTIVE_STANDBY);
 
     System.sleep(config);
-    // On wake, we drop back into loop() and do the cycle again
+    // On wake cycle again
 }
 
 void battSettings() {
@@ -196,4 +222,3 @@ void battSettings() {
       
   System.setPowerConfiguration(conf);
 }
-
