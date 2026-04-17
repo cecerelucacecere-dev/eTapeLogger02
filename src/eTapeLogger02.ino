@@ -217,7 +217,7 @@ void battSettings() {
   SystemPowerConfiguration conf; 
   conf.powerSourceMaxCurrent(900)    // 5W / 5V = 1000mA. 900mA is the closest PMIC register setting.
       .powerSourceMinVoltage(3880)  
-      .batteryChargeCurrent(500)
+      .batteryChargeCurrent(150)
       .batteryChargeVoltage(4110);  
       
   System.setPowerConfiguration(conf);
