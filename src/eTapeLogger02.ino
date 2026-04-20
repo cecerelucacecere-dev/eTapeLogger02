@@ -1,7 +1,7 @@
 //Project Name: CouleeRunoff_02 eTape Code
 //Device Name: CouleeRunoff_02
 //Device CoreID: e00fce6816fe5cd226cc300b
-//Author: Luca Cecere
+//Author: Luca M. Cecere
 //Credit to CSU Agricultural Water Quality Program Team
 
 #include "Particle.h"
