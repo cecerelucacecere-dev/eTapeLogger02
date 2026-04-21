@@ -41,6 +41,7 @@ double v_sensorV = 0.0;
 double v_battSoc = 0.0;
 double v_battV = 0.0;
 int v_cellSig = 0;
+double v_batteryState = 0;
 
 struct Reading
 {                 
@@ -50,6 +51,7 @@ struct Reading
     float batteryVolts;
     float cellStrength;
     unsigned long timestamp;
+    int batteryState;
 };
 
 Reading currentReading;
@@ -78,6 +80,7 @@ void setup() {
     Particle.variable("BattVolts", v_battV);
     Particle.variable("CellSignal", v_cellSig);
     Particle.variable("QCount", readingCount); // Exposing the retained count
+    Particle.variable("BatteryState", v_batteryState);
     
 }
 
@@ -142,6 +145,7 @@ void takeMeasurement() {
     v_battSoc = (double)currentReading.batterySoc;
     v_battV = (double)currentReading.batteryVolts;
     v_cellSig = currentReading.cellStrength;
+    v_batteryState = (double)currentReading.batteryState;
 }
 
 void storeReading() {
@@ -172,13 +176,14 @@ void publishBatch() {
             char temp[64];
 
             snprintf(temp,sizeof(temp),
-            "[%lu,%.2f,%.2f,%.2f,%.2f,%.2f]",
+            "[%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%.1f]",
             readings[i].timestamp,
             readings[i].depth,
             readings[i].batteryVolts,
             readings[i].cellStrength,
             readings[i].volts,
-            readings[i].batterySoc
+            readings[i].batterySoc,
+            readings[i].batteryState
         );
 
         strcat(payload, temp);
@@ -215,10 +220,10 @@ void goToSleep() {
 void battSettings() {
   
   SystemPowerConfiguration conf; 
-  conf.powerSourceMaxCurrent(900)    // 5W / 5V = 1000mA. 900mA is the closest PMIC register setting.
+  conf.powerSourceMaxCurrent(500)    // 5W / 5V = 1000mA. 900mA is the closest PMIC register setting.
       .powerSourceMinVoltage(3880)  
       .batteryChargeCurrent(150)
-      .batteryChargeVoltage(4110);  
+      .batteryChargeVoltage(4210);  
       
   System.setPowerConfiguration(conf);
 }
